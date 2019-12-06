@@ -1,0 +1,75 @@
+---
+    - name: Wait up to 600 seconds until instance is ready
+      wait_for:
+        host: "{{ eth0_ipv4 }}"
+        port: 22
+        delay:  5
+        timeout: 600
+    - set_fact:
+        eth0_ip: '{{ eth0_ipv4 + "/" + eth0_mask }}'
+        eth1_ip: '{{ eth1_ipv4 + "/" + eth1_mask }}'
+        eth2_ip: '{{ eth2_ipv4 + "/" + eth2_mask }}'
+
+    - set_fact:
+        eth0_network: "{{ eth0_ip | ipaddr('network') }}"
+        eth1_network: "{{ eth1_ip | ipaddr('network') }}"
+        eth2_network: "{{ eth2_ip | ipaddr('network') }}"
+
+    - set_fact:
+        eth0_net: '{{ eth0_network + "/" + eth0_mask }}'
+
+    - set_fact:
+        defaultroute: "{{ eth0_net | ipaddr('net') | ipaddr('1') }}"
+
+    - set_fact:
+        defaultaddress: "{{ defaultroute | ipaddr('address') }}"
+
+    - name: "Configure DNS and NTP Settings on Gateway"
+      command: "{{ item }}"
+      with_items:
+        - clish -c 'set dns primary 8.8.8.8' -s
+        - clish -c 'set dns secondary 8.8.4.4' -s
+        - clish -c 'set ntp server primary 0.pool.ntp.org version 4' -s
+        - clish -c 'set ntp server secondary 1.pool.ntp.org version 4' -s
+        - clish -c 'set ntp active on' -s
+
+    - name: "Configure Static Routes and interfaces on Gateway"
+      command: "{{ item }}"
+      with_items:
+        - clish -c 'set interface eth1 ipv4-address {{ eth1_ipv4 }} mask-length {{ eth1_mask }}' -s
+        - clish -c 'set interface eth1 state on' -s
+        - clish -c 'set interface eth2 ipv4-address {{ eth2_ipv4 }} mask-length {{ eth2_mask }}' -s
+        - clish -c 'set interface eth2 state on' -s
+        - clish -c 'set static-route default nexthop gateway address {{ defaultaddress }} on' -s
+
+    - name: Check if gateway is already setup
+      stat:
+        path: /etc/.wizard_accepted
+      register: ftw
+
+    - name: Setup the Gateway if needed
+      block:
+      - name: "Create config_system on the gateway"
+        raw: echo "config_system --config-string \"hostname={{ hostname }}&ftw_sic_key=vpn123&timezone='America/New_York'&install_security_managment=false&install_mgmt_primary=false&install_security_gw=true&gateway_daip=false&install_ppak=true&gateway_cluster_member=true&download_info=true\" >> ftw.output & " > /home/admin/ftwstart
+
+      - name: "Change permissions"
+        raw: chmod 755 ftwstart
+
+      - name: "Run the FTW Setup"
+        command: "/bin/bash /home/admin/ftwstart"
+
+      - name: Wait until the FTW completes
+        wait_for:
+          path: /etc/.wizard_accepted
+          state: present
+          delay: 10
+
+      - name: Waiting for 10 seconds before reboot
+        pause:
+          seconds: 10
+
+      - name: Rebooting
+        command: "shutdown -r now"
+
+      when: ftw.stat.path is not defined
+

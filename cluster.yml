@@ -1,5 +1,4 @@
 ---
-
 - name: Build Cluster Member Instances 
   hosts: localhost
   gather_facts: no
@@ -20,5 +19,31 @@
        eth1_mask: 24
        eth2_ipv4: "192.168.102.3"
        eth2_mask: 24
+     
+- name: "Setup {{ mem1_name }} and run FTW" 
+  hosts:  "{{ mem1_eth0_ip }}" 
+  gather_facts: no
+  vars_files: chkp_vars.yml
+  roles:
+     - role: gaia_setup 
+       hostname: "{{ mem1_name }}"
+       eth0_ipv4: "{{ mem1_eth0_ip }}"
+       eth0_mask: "{{ mem1_eth0_length }}" 
+       eth1_ipv4: "{{ mem1_eth1_ip }}"
+       eth1_mask: "{{ mem1_eth1_length }}"
+       eth2_ipv4: "{{ mem1_eth2_ip }}"
+       eth2_mask: "{{ mem1_eth2_length }}"
 
-
+- name: "Setup {{ mem2_name }} and run FTW" 
+  hosts:  "{{ mem2_eth0_ip }}"
+  gather_facts: no
+  vars_files: chkp_vars.yml
+  roles:
+     - role: gaia_setup
+       hostname: "{{ mem2_name }}"
+       eth0_ipv4: "{{ mem2_eth0_ip }}"
+       eth0_mask: "{{ mem2_eth0_length }}"
+       eth1_ipv4: "{{ mem2_eth1_ip }}"
+       eth1_mask: "{{ mem2_eth1_length }}"
+       eth2_ipv4: "{{ mem2_eth2_ip }}"
+       eth2_mask: "{{ mem2_eth2_length }}"

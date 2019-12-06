@@ -1,0 +1,4 @@
+---
+# tasks file for gaia_setup
+#
+- import_tasks: gaia_setup.yml

@@ -1,10 +1,10 @@
 ---
 # tasks file for vmware_clone_template
-
 - name:  Check if Gateway VM already exists
   block:
-    - name: Get virtual machine info
-      vmware_guest_info:
+
+  - name: Get virtual machine info
+    vmware_guest_info:
         hostname: 10.2.0.17
         username: administrator@vsphere.local
         password: Cpwins1!
@@ -13,11 +13,11 @@
         datacenter: Home
         name: "{{ hostname }}"
         #  ignore_errors: yes
-      register: vm_info
+    register: vm_info
 
   rescue:
-    - name: Create R80.30 Gateway from template
-      vmware_guest:
+  - name: Create R80.30 Gateway from template
+    vmware_guest:
         hostname: 10.2.0.17
         username: administrator@vsphere.local
         password: Cpwins1!
@@ -40,18 +40,19 @@
         - name: Hades_Canyon_Sync
           start_connected: true
         wait_for_ip_address: yes
-      delegate_to: localhost
-      register: newvm
+    delegate_to: localhost
+    register: newvm
 
-    - debug: msg="New Gateway is available at {{ newvm.instance.ipv4 }}"
-
-    - add_host:
-        name: "{{  newvm.instance.ipv4 }}"
-        group: new_firewalls
-  when: vminfo is not defined 
 
 - name: Setup Eth0 if needed
   block:
+    - name: Wait up to 600 seconds until instance is ready
+      wait_for:
+        host: "{{ newvm.instance.ipv4 }}"
+        port: 22
+        delay: 2
+        timeout: 600
+
     - name: "Create config for eth0"
       delegate_to: "{{ item }}"
       raw: " echo \"sleep 2;clish -c 'delete dhcp client interface eth0' -s;clish -c 'set interface eth0 ipv4-address {{ eth0_ipv4 }} mask-length {{ eth0_mask }}' -s; \" > /home/admin/SetEth0" 
@@ -73,5 +74,13 @@
       with_items:
          - "{{ newvm.instance.ipv4 }}"
 
-  when: inventory_hostname != eth0_ipv4
+  when:  newvm.instance.ipv4 is defined 
+
+
+- name: Wait up to 600 seconds until instance is ready
+  wait_for:
+       host: "{{ eth0_ipv4 }}"
+       port: 22
+       delay: 2
+       timeout: 600
 
