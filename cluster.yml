@@ -1,6 +1,6 @@
 ---
 
-- name: Build Cluster member 1
+- name: Build Cluster Member Instances 
   hosts: localhost
   gather_facts: no
   roles:
