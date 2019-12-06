@@ -1,0 +1,77 @@
+---
+# tasks file for vmware_clone_template
+
+- name:  Check if Gateway VM already exists
+  block:
+    - name: Get virtual machine info
+      vmware_guest_info:
+        hostname: 10.2.0.17
+        username: administrator@vsphere.local
+        password: Cpwins1!
+        folder: /
+        validate_certs: no
+        datacenter: Home
+        name: "{{ hostname }}"
+        #  ignore_errors: yes
+      register: vm_info
+
+  rescue:
+    - name: Create R80.30 Gateway from template
+      vmware_guest:
+        hostname: 10.2.0.17
+        username: administrator@vsphere.local
+        password: Cpwins1!
+        name: "{{ hostname }}"
+        folder: /
+        datacenter: Home
+        validate_certs: no
+        template: R80dot30_2.6_1.3API_GW 
+        esxi_hostname: 10.2.0.40
+        state: poweredon
+        disk:
+        - size_gb: 80
+          type: thin
+          datastore: Samsung_970Pro_1TB_1
+        networks:
+        - name: VM Network
+          start_connected: true
+        - name: Hades_Canyon_DMZ1
+          start_connected: true
+        - name: Hades_Canyon_Sync
+          start_connected: true
+        wait_for_ip_address: yes
+      delegate_to: localhost
+      register: newvm
+
+    - debug: msg="New Gateway is available at {{ newvm.instance.ipv4 }}"
+
+    - add_host:
+        name: "{{  newvm.instance.ipv4 }}"
+        group: new_firewalls
+  when: vminfo is not defined 
+
+- name: Setup Eth0 if needed
+  block:
+    - name: "Create config for eth0"
+      delegate_to: "{{ item }}"
+      raw: " echo \"sleep 2;clish -c 'delete dhcp client interface eth0' -s;clish -c 'set interface eth0 ipv4-address {{ eth0_ipv4 }} mask-length {{ eth0_mask }}' -s; \" > /home/admin/SetEth0" 
+      with_items:
+         - "{{ newvm.instance.ipv4 }}"
+
+    - name: "Set the SetEth0 to 755"
+      delegate_to: "{{ item }}"
+      file:
+         path: /home/admin/SetEth0
+         mode: '0755'
+      with_items:
+         - "{{ newvm.instance.ipv4 }}"
+
+    - name: "Run the eth0 change"
+      delegate_to: "{{ item }}"
+      shell: "nohup /bin/bash /home/admin/SetEth0 &"
+      poll: 0
+      with_items:
+         - "{{ newvm.instance.ipv4 }}"
+
+  when: inventory_hostname != eth0_ipv4
+

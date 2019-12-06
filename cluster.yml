@@ -1,0 +1,24 @@
+---
+
+- name: Build Cluster member 1
+  hosts: localhost
+  gather_facts: no
+  roles:
+     - role: vmware_clone_template
+       hostname: "Cluster1_Mem1"
+       eth0_ipv4: "10.2.0.194"
+       eth0_mask: 24
+       eth1_ipv4: "192.168.101.2"
+       eth1_mask: 24
+       eth2_ipv4: "192.168.102.2"
+       eth2_mask: 24
+     - role: vmware_clone_template
+       hostname: "Cluster1_Mem2"
+       eth0_ipv4: "10.2.0.195"
+       eth0_mask: 24
+       eth1_ipv4: "192.168.101.3"
+       eth1_mask: 24
+       eth2_ipv4: "192.168.102.3"
+       eth2_mask: 24
+
+
