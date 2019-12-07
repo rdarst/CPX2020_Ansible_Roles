@@ -47,3 +47,26 @@
        eth1_mask: "{{ mem2_eth1_length }}"
        eth2_ipv4: "{{ mem2_eth2_ip }}"
        eth2_mask: "{{ mem2_eth2_length }}"
+
+- name: "Setup R80 Policy"
+  hosts:  "{{ mgmt_server }}"
+  connection: httpapi
+  gather_facts: no
+  vars_files: chkp_vars.yml
+  roles:
+     - role: R80_Policy 
+
+- name: "Setup Cluster"
+  hosts: localhost 
+  gather_facts: no
+  vars_files: chkp_vars.yml
+  roles:
+     - role: CHKP_Cluster 
+
+- name: "Install Policy"
+  hosts:  "{{ mgmt_server }}"
+  connection: httpapi
+  gather_facts: no
+  vars_files: chkp_vars.yml
+  roles:
+     - role: CHKP_Install_Policy 

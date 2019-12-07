@@ -1,0 +1,17 @@
+---    
+    - name: Install Access Policy to {{ cluster_name }} 
+      cp_mgmt_install_policy:
+        access: true 
+        threat_prevention: false
+        policy_package: "{{ policy_name }}" 
+        targets:
+          - "{{ cluster_name }}"
+
+    - name: Install Threat Policy to {{ cluster_name }}
+      cp_mgmt_install_policy:
+        access: false
+        threat_prevention: true
+        policy_package: "{{ policy_name }}" 
+        targets:
+          - "{{ cluster_name }}"
+

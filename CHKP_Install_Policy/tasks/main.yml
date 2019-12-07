@@ -1,0 +1,3 @@
+---
+# tasks file for CHKP_Install_Policy
+- import_tasks: Install_Policy.yml

@@ -1,0 +1,3 @@
+---
+# tasks file for CHKP_Cluster
+- import_tasks: CHKP_Cluster.yml
