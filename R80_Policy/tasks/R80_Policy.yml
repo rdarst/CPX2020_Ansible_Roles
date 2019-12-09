@@ -3,19 +3,22 @@
       cp_mgmt_host:
         name: "Sales Web Server"
         ip_address: 10.4.0.131
-        color: blue
+        color: red 
+      notify: Publish Handeler
 
     - name:  Create web server for development 
       cp_mgmt_host:
         name: "Dev Web Server"
         ip_address: 10.1.0.132
         color: orange
+      notify: Publish Handeler
         
     - name: add-security-zone
       cp_mgmt_security_zone:
         color: blue 
         name: InsideZone 
         state: present
+      notify: Publish Handeler
 
     - set_fact:
         eth1_ip: '{{ mem1_eth1_ip + "/" + mem1_eth1_length }}'
@@ -34,6 +37,7 @@
            auto_rule: true
            hide_behind: "gateway"
            method: "hide"
+      notify: Publish Handeler
 
     - name:  Create Jump Network
       cp_mgmt_network:
@@ -42,6 +46,7 @@
         mask_length: "24"
         state: present
         color: orange
+      notify: Publish Handeler
 
     - name: Create Policy Package 
       cp_mgmt_package:
@@ -50,6 +55,7 @@
         color: pink 
         name: "{{ policy_name }}" 
         state: present
+      notify: Publish Handeler
 
     - name: "Set Threat Rule 1"
       cp_mgmt_threat_rule:
@@ -57,6 +63,7 @@
         name: "Threat Rule 1"
         position: "1"
         action: "CPX_Threat_Profile"
+      notify: Publish Handeler
 
     - name: Set Access Layer for URLF and APPC
       cp_mgmt_access_layer:
@@ -64,6 +71,7 @@
         firewall: true
         name: "{{ policy_name }} Network" 
         state: present
+      notify: Publish Handeler
 
     - name: Set Logging on the Cleanup rule 
       cp_mgmt_access_rule:
@@ -72,6 +80,7 @@
         track:
           type: "Log"
         state: present
+      notify: Publish Handeler
 
     - name: Create rule - DHCP Rule
       cp_mgmt_access_rule:
@@ -86,6 +95,7 @@
         track:
           type: "Extended Log"
         action: Accept
+      notify: Publish Handeler
 
     - name: Create rule - Demo Rule 
       cp_mgmt_access_rule:
@@ -104,6 +114,7 @@
           type: "Extended Log"         
         action: Accept
         source_negate: no 
+      notify: Publish Handeler
 
 
     - name: Create rule - SSH 
@@ -119,6 +130,7 @@
         track:
           type: "Extended Log"
         action: Accept
+      notify: Publish Handeler
 
     - name: Internal to Internet 
       cp_mgmt_access_rule:
@@ -129,10 +141,4 @@
         track:
           type: "Extended Log"
         action: Accept
-   
-    - name: publish
-      cp_mgmt_publish:
-      register: publish_response
-  
-    - debug:
-        var: publish_response
+      notify: Publish Handeler
