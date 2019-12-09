@@ -3,7 +3,7 @@
       cp_mgmt_host:
         name: "Sales Web Server"
         ip_address: 10.4.0.131
-        color: red 
+        color: blue
       notify: Publish Handeler
 
     - name:  Create web server for development 
