@@ -3,7 +3,7 @@
       cp_mgmt_host:
         name: "Sales Web Server"
         ip_address: 10.4.0.131
-        color: blue
+        color: red
       notify: Publish Handeler
 
     - name:  Create web server for development 
@@ -52,7 +52,7 @@
       cp_mgmt_package:
         access: true
         threat_prevention: true 
-        color: pink 
+        color: blue
         name: "{{ policy_name }}" 
         state: present
       notify: Publish Handeler
