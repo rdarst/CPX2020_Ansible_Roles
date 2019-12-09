@@ -37,10 +37,6 @@
     - set_fact:
          sid: "{{ loginoutput.json.sid }}"
   
-    - name: "Check Point SID" 
-      debug:
-         msg: "{{ sid }}"
-
     - name: "Add Cluster"
       uri:
          url: "https://{{ mgmt_server }}/web_api/add-simple-cluster"
@@ -180,6 +176,10 @@
       register: taskoutput
       until: (taskoutput.json.tasks[0]['progress-percentage'] == 100)
 
+    - pause: 
+        seconds: 15
+
+
     - name: Logout
       uri:
          url: "https://{{ mgmt_server }}/web_api/logout"
@@ -189,4 +189,5 @@
          body: "{}"
          headers : 
            X-chkp-sid : "{{ sid }}"
+
     when:  cluster_total == "0" 
