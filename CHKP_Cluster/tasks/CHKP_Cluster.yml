@@ -129,7 +129,11 @@
 
     - set_fact:
          clustertask: "{{ clustertaskid.json['task-id'] }}"
-  
+
+    - name: Waiting for 5 seconds before 
+      pause:
+        seconds:  5
+
     - name: Check Cluster Task Progress Status
       uri:
          url: "https://{{ mgmt_server }}/web_api/show-task"
@@ -177,8 +181,7 @@
       until: (taskoutput.json.tasks[0]['progress-percentage'] == 100)
 
     - pause: 
-        seconds: 15
-
+        seconds: 3 
 
     - name: Logout
       uri:
