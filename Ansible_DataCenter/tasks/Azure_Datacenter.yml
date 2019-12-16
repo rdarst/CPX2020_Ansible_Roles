@@ -1,0 +1,189 @@
+  - name: Login
+    uri:
+       url: "https://{{ mgmt_server }}/web_api/login"
+       validate_certs: false
+       method: POST
+       body_format: json
+       body: "{ \"user\" : \"{{ mgmt_user }}\", \"password\" : \"{{ mgmt_password }}\" }"
+    register: loginoutput
+
+  - set_fact:
+       sid: "{{ loginoutput.json.sid }}"
+
+  - name: "Check to see if Azure Data Center already exists"
+    uri:
+       url: "https://{{ mgmt_server }}/web_api/show-objects"
+       validate_certs: false
+       method: POST
+       body_format: json
+       headers :
+         X-chkp-sid : "{{ sid }}"
+       body: "{
+                \"in\" : [ \"name\", \"{{ azure_dc_name }}\" ],
+                \"type\" : \"data-center-server\"
+              }"
+    register: DC_Exist
+
+  - set_fact:
+      dc_exists: "{{ DC_Exist.json.total }}"
+
+  - debug:
+      msg: "{{dc_exists}}"
+
+  - name: Create Data Center Server if it does not exist
+    block:
+
+    - name: "Create Azure Data Center"
+      uri:
+         url: "https://{{ mgmt_server }}/web_api/add-data-center-server"
+         validate_certs: false
+         method: POST
+         body_format: json
+         headers :
+           X-chkp-sid : "{{ sid }}"
+         body: "{
+                  \"name\" : \"{{ azure_dc_name }}\",
+                  \"type\" : \"azure\",
+                  \"authentication-method\" : \"user-authentication\",
+                  \"username\" : \"{{ azure_user }}\",
+                  \"password\" : \"{{ azure_pass }}\"
+                }"
+      register: DC_Setup
+
+    - set_fact:
+         task: "{{ DC_Setup.json['task-id'] }}"
+
+    - name: Check Task Progress Status
+      uri:
+         url: "https://{{ mgmt_server }}/web_api/show-task"
+         validate_certs: false
+         method: POST
+         body_format: json
+         body: "{ \"task-id\" :  \"{{task}}\" }"
+         headers:
+           X-chkp-sid : "{{ sid }}"
+      retries: 20
+      delay: 5
+      register: taskoutput
+      until: (taskoutput.json.tasks[0]['progress-percentage'] == 100)
+
+    - name: Publish
+      uri:
+         url: "https://{{ mgmt_server }}/web_api/publish"
+         validate_certs: false
+         method: POST
+         body_format: json
+         body: "{}"
+         headers :
+           X-chkp-sid : "{{ sid }}"
+      register: taskid
+
+    - set_fact:
+         task: "{{ taskid.json['task-id'] }}"
+
+    - name: Check Task Progress Status
+      uri:
+         url: "https://{{ mgmt_server }}/web_api/show-task"
+         validate_certs: false
+         method: POST
+         body_format: json
+         body: "{ \"task-id\" :  \"{{task}}\" }"
+         headers:
+           X-chkp-sid : "{{ sid }}"
+      retries: 20
+      delay: 5
+      register: taskoutput
+      until: (taskoutput.json.tasks[0]['progress-percentage'] == 100)
+    when: dc_exists == "0"
+
+  - name: "Check to see if Azure instance already exists"
+    uri:
+       url: "https://{{ mgmt_server }}/web_api/show-objects"
+       validate_certs: false
+       method: POST
+       body_format: json
+       headers :
+         X-chkp-sid : "{{ sid }}"
+       body: "{
+                \"in\" : [ \"name\", \"cpx2020-vm\" ],
+                \"type\" : \"data-center-object\"
+              }"
+    register: VM_Exist
+
+  - set_fact:
+      vm_exists: "{{ VM_Exist.json.total }}"
+
+  - name: Create DC Object if it does not exist
+    block:
+
+    - name: "Get UID for VM from data center"
+      uri:
+         url: "https://{{ mgmt_server }}/web_api/show-data-center-content"
+         validate_certs: false
+         method: POST
+         body_format: json
+         headers :
+           X-chkp-sid : "{{ sid }}"
+         body: "{
+                  \"data-center-name\" : \"{{ azure_dc_name }}\",
+                  \"filter\" : { \"text\" : \"cpx2020-vm\"}
+                }"
+      register: VM_Data
+
+    - set_fact:
+        my_vm: "{{ VM_Data | json_query(query) }}"
+      vars:
+        query: 'json.objects[0]."uid-in-data-center"'
+
+    - name: "Create Azure VM"
+      uri:
+         url: "https://{{ mgmt_server }}/web_api/add-data-center-object"
+         validate_certs: false
+         method: POST
+         body_format: json
+         headers :
+           X-chkp-sid : "{{ sid }}"
+         body: "{
+                  \"data-center-name\" : \"{{ azure_dc_name }}\",
+                  \"uid-in-data-center\" : \"{{ my_vm }}\"
+                }"
+      register: VM_Setup
+
+    - name: Publish
+      uri:
+         url: "https://{{ mgmt_server }}/web_api/publish"
+         validate_certs: false
+         method: POST
+         body_format: json
+         body: "{}"
+         headers :
+           X-chkp-sid : "{{ sid }}"
+      register: taskid
+
+    - set_fact:
+         task: "{{ taskid.json['task-id'] }}"
+
+    - name: Check Task Progress Status
+      uri:
+         url: "https://{{ mgmt_server }}/web_api/show-task"
+         validate_certs: false
+         method: POST
+         body_format: json
+         body: "{ \"task-id\" :  \"{{task}}\" }"
+         headers:
+           X-chkp-sid : "{{ sid }}"
+      retries: 20
+      delay: 5
+      register: taskoutput
+      until: (taskoutput.json.tasks[0]['progress-percentage'] == 100)
+    when: vm_exists == "0"
+
+  - name: Logout
+    uri:
+       url: "https://{{ mgmt_server }}/web_api/logout"
+       validate_certs: false
+       method: POST
+       body_format: json
+       body: "{}"
+       headers :
+         X-chkp-sid : "{{ sid }}"

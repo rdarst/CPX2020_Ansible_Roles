@@ -25,7 +25,7 @@
         folder: /
         datacenter: Home
         validate_certs: no
-        template: R80dot30_2.6_1.3API_GW 
+        template: R80dot30_2.6_1.3API_GW_V1.0 
         esxi_hostname: 10.2.0.40
         state: poweredon
         disk:

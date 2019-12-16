@@ -34,4 +34,4 @@ mem2_eth1_ip : "192.168.101.3"
 mem2_eth1_length : "24"
 mem2_eth2_ip : "192.168.102.3"
 mem2_eth2_length : "24"
-
+azure_dc_name : "Azure_CPX2020_DC"

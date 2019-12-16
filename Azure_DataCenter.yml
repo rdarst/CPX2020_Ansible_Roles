@@ -1,0 +1,14 @@
+---
+
+- name: "Setup Azure DataCenter Object and Instance"
+  hosts: localhost 
+  gather_facts: no
+  vars_files: chkp_vars.yml
+  roles:
+     - role: Ansible_DataCenter 
+       azure_user : "{{ lookup('env','azure_user') }}"
+       azure_pass : "{{ lookup('env','azure_pass') }}"
+
+
+
+

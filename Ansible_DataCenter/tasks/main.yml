@@ -1,0 +1,3 @@
+---
+# tasks file for Ansible_DataCenter
+- import_tasks: Azure_Datacenter.yml 

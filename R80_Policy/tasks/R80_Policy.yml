@@ -127,6 +127,8 @@
           - ssh
           - icmp-requests
           - https
+          - dns
+          - http
         track:
           type: "Extended Log"
         action: Accept
