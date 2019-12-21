@@ -104,4 +104,43 @@
         position: "2"
         source:
                 - "Sales Web Server"
-                - "cpx2020-vm (cpx2020-resources)"Update 
+                
+        destination:
+          - "Dev Web Server"
+        service:
+          - https
+          - http
+          - ftp  
+        track:
+          type: "Extended Log"         
+        action: Accept
+        source_negate: no 
+      notify: Publish Handeler
+
+    - name: Create rule - SSH 
+      cp_mgmt_access_rule:
+        layer: "{{ policy_name }} Network"
+        name: "Gaia API and SSH Access"
+        position: "3"
+        source: "Jump_Network"
+        service:
+          - ssh
+          - icmp-requests
+          - https
+          - dns
+          - http
+        track:
+          type: "Extended Log"
+        action: Accept
+      notify: Publish Handeler
+
+    - name: Internal to Internet 
+      cp_mgmt_access_rule:
+        layer: "{{ policy_name }} Network"
+        name: "Internal to Internet"
+        position: "4"
+        source: "Internal_Network"
+        track:
+          type: "Extended Log"
+        action: Accept
+      notify: Publish Handeler 
