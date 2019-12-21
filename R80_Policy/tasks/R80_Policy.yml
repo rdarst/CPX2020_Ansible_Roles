@@ -104,7 +104,7 @@
         position: "2"
         source:
                 - "Sales Web Server"
-                - "cpx2020-vm (cpx2020-resources)"
+                
         destination:
           - "Dev Web Server"
         service:
