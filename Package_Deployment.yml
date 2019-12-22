@@ -1,0 +1,9 @@
+---
+
+- name: "Install Jumbo to Cluster"
+  hosts: localhost 
+  gather_facts: no
+  vars_files: chkp_vars.yml
+  roles:
+     - role: Package_Deployment 
+       jumbo_identifier: "Check_Point_R80_30_JUMBO_HF_Bundle_T111_sk153152_Security_Gateway_and_Standalone_2_6_18_FULL.tgz"
