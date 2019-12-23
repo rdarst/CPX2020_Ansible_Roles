@@ -142,5 +142,5 @@
         source: "Internal_Network"
         track:
           type: "Extended Log"
-        action: Drop
+        action: Accept
       notify: Publish Handeler 
